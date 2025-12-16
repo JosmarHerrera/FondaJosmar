@@ -16,43 +16,37 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.cors(cors -> cors.configurationSource(corsConfigurationSource())).csrf(csrf -> csrf.disable())
-				.formLogin(form -> form.disable()).httpBasic(basic -> basic.disable())
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-				.authorizeHttpRequests(authz -> authz
-						// 1. Permite las peticiones OPTIONS (para CORS pre-flight)
-						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/**").permitAll()
+                .anyRequest().permitAll()
+            );
 
-						// 2. ¡AQUÍ LA CLAVE! Permite que todos vean la carpeta de fotos
-						.requestMatchers("/uploads/**").permitAll()
+        return http.build();
+    }
 
-						// 3. Permite que React llame a tu API
-						.requestMatchers("/api/**").permitAll()
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
 
-						// 4. (Opcional) Cierra todo lo demás. Por ahora lo dejamos en permitAll.
-						.anyRequest().permitAll());
+        // 🔑 CLAVE: Railway + React sin cookies
+        config.setAllowedOriginPatterns(java.util.List.of("*"));
+        config.setAllowedMethods(java.util.List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedHeaders(java.util.List.of("*"));
+        config.setAllowCredentials(false); // 👈 OBLIGATORIO con "*"
 
-		return http.build();
-	}
-
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowCredentials(true);
-
-		// ✅ Permitir local y Railway (AGREGADO)
-		config.addAllowedOriginPattern("http://localhost:3000");
-		config.addAllowedOriginPattern("https://frontjosmar-production.up.railway.app");
-
-		config.addAllowedHeader("*");
-		config.addAllowedMethod("*");
-
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", config);
-		return source;
-	}
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }
