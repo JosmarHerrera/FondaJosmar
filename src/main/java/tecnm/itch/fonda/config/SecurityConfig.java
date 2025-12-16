@@ -40,20 +40,16 @@ public class SecurityConfig {
 
 	@Bean
 public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
+  CorsConfiguration configuration = new CorsConfiguration();
+  configuration.setAllowedOriginPatterns(java.util.List.of("*"));
+  configuration.setAllowedMethods(java.util.List.of("GET","POST","PUT","DELETE","OPTIONS"));
+  configuration.setAllowedHeaders(java.util.List.of("*"));
+  configuration.setAllowCredentials(false); // IMPORTANTE con "*"
 
-    configuration.setAllowedOrigins(Arrays.asList(
-        "http://localhost:3000",
-        "https://frontjosmar-production.up.railway.app"
-    ));
-
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(Arrays.asList("*"));
-    configuration.setAllowCredentials(true);
-
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
+  UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+  source.registerCorsConfiguration("/**", configuration);
+  return source;
 }
+
 
 }
